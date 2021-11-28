@@ -140,7 +140,7 @@ HELLO init_hello(EFI_HANDLE handle, EFI_SYSTEM_TABLE *systbl) {
   hello->systbl = systbl;
   printf(hello, L"firmware.vendor=%s\r\n", systbl->FirmwareVendor);
   printf(hello, L"firmware.revision=0x%x\r\n", systbl->FirmwareRevision);
-  printf(hello, L"memory pool has been allocated %lu at %p\r\n", sizeof(*hello), pool);
+  printf(hello, L"memory pool has been allocated %lu bytes at %p\r\n", sizeof(*hello), pool);
   EFI_GUID guids[] = {
       EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID,
       EFI_MP_SERVICES_PROTOCOL_GUID,
