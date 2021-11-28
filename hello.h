@@ -11,6 +11,7 @@ typedef struct _HELLO *HELLO;
 
 EFI_STATUS clear_console(HELLO hello);
 EFI_STATUS create_event(HELLO hello, UINT32 type, EFI_TPL tpl, EFI_EVENT_NOTIFY notify, VOID *arg, EFI_EVENT *event);
+void dump_graphic_output_mode(HELLO hello);
 void dump_memory_map(HELLO hello);
 EFI_GRAPHICS_OUTPUT_BLT_PIXEL *get_framebuffer(HELLO hello, UINTN *horz, UINTN *vert);
 const wchar_t *get_memory_map_type_name(UINT32 type);

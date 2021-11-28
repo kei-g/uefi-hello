@@ -54,6 +54,16 @@ EFI_STATUS create_event(HELLO hello, UINT32 type, EFI_TPL tpl, EFI_EVENT_NOTIFY 
   return (*hello->systbl->BootServices->CreateEvent)(type, tpl, notify, ctx, event);
 }
 
+void dump_graphic_output_mode(HELLO hello) {
+  EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE *mode = hello->gop->Mode;
+  printf(hello, L"gop.framebuffer: %p - %p\r\n", mode->FrameBufferBase, mode->FrameBufferBase + mode->FrameBufferSize);
+  printf(hello, L"gop.mode: %u/%u\r\n", mode->Mode, mode->MaxMode);
+  EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *info = mode->Info;
+  printf(hello, L"gop.pixelformat: %s\r\n", get_pixel_format_name(info->PixelFormat));
+  printf(hello, L"gop.resolution: %u x %u\r\n", info->HorizontalResolution, info->VerticalResolution);
+  printf(hello, L"gop.scanline: %u pixels\r\n", info->PixelsPerScanLine);
+}
+
 void dump_memory_map(HELLO hello) {
   uintptr_t cur = (uintptr_t)hello->memmap.buffer;
   uintptr_t end = cur + hello->memmap.buffer_size;
