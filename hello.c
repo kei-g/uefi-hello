@@ -65,10 +65,10 @@ void dump_graphic_output_mode(HELLO hello) {
 }
 
 void dump_memory_map(HELLO hello) {
-  uintptr_t cur = (uintptr_t)hello->memmap.buffer;
+  uintptr_t cur = (uintptr_t)hello->memmap.map;
   uintptr_t end = cur + hello->memmap.buffer_size;
   for (UINTN i = 0; cur < end; cur += hello->memmap.desc_size, i++) {
-    const EFI_MEMORY_DESCRIPTOR *d = &hello->memmap.map[i];
+    const EFI_MEMORY_DESCRIPTOR *d = (EFI_MEMORY_DESCRIPTOR *)cur;
     printf(hello, L"memmap.%lu: %s attr=0x%lx, addr=%p, %lu pages\r\n", i, get_memory_map_type_name(d->Type), d->Attribute, d->PhysicalStart, d->NumberOfPages);
   }
 }
