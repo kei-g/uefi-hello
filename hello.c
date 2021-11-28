@@ -223,6 +223,11 @@ EFI_STATUS startup_all_aps(HELLO hello, EFI_AP_PROCEDURE proc, UINT8 single, EFI
   return mpsp ? (*mpsp->StartupAllAPs)(mpsp, proc, single, event, timeout, arg, failed) : ((*proc)(arg), EFI_SUCCESS);
 }
 
+EFI_STATUS switch_graphic_output_mode(HELLO hello, UINTN mode) {
+  EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = hello->gop;
+  return (*gop->SetMode)(gop, mode);
+}
+
 void unlock_hello(HELLO hello) {
   spinlock_unlock(&hello->locked);
 }

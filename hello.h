@@ -26,6 +26,7 @@ EFI_STATUS puts(HELLO hello, const wchar_t *str);
 EFI_STATUS query_graphic_output_modes(HELLO hello, HELLO_QUERY_GRAPHIC_OUTPUT_MODE_CALLBACK callback, void *arg);
 void reverse(wchar_t *buf, size_t len);
 EFI_STATUS startup_all_aps(HELLO hello, EFI_AP_PROCEDURE proc, UINT8 single, EFI_EVENT event, UINTN timeout, VOID *arg, UINTN **failed);
+EFI_STATUS switch_graphic_output_mode(HELLO hello, UINTN mode);
 void unlock_hello(HELLO hello);
 EFI_STATUS vprintf(HELLO hello, const wchar_t *fmt, va_list ap);
 EFI_STATUS whoami(HELLO hello, UINTN *index);
