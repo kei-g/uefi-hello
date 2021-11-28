@@ -27,7 +27,7 @@ EFI_STATUS EfiMain(EFI_HANDLE handle, EFI_SYSTEM_TABLE *systbl) {
   status = startup_all_aps(hello, ApMain, EFI_FALSE, evt, 0, hello, NULL);
   if (status & EFI_ERR)
     printf(hello, L"failed to startup all APs, 0x%lx\r\n", status);
-  else
+  else if (status == EFI_SUCCESS)
     ApMain(hello);
   return EFI_SUCCESS;
 }
