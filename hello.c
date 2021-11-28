@@ -161,6 +161,11 @@ HELLO init_hello(EFI_HANDLE handle, EFI_SYSTEM_TABLE *systbl) {
   if (status & EFI_ERR)
     printf(hello, L"failed to locate mpsp protocol, 0x%lx\r\n", status);
   hello->mpsp = mpsp;
+  if (hello->mpsp) {
+    status = (*hello->mpsp->GetNumberOfProcessors)(hello->mpsp, &hello->num_proc, &hello->num_enabled_proc);
+    if (status & EFI_ERR)
+      printf(hello, L"failed to get number of processors, 0x%lx\r\n", status);
+  }
   return hello;
 }
 
