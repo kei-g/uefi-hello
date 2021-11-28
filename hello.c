@@ -69,7 +69,7 @@ void dump_memory_map(HELLO hello) {
   uintptr_t end = cur + hello->memmap.buffer_size;
   for (UINTN i = 0; cur < end; cur += hello->memmap.desc_size, i++) {
     const EFI_MEMORY_DESCRIPTOR *d = (EFI_MEMORY_DESCRIPTOR *)cur;
-    printf(hello, L"memmap.%lu: %s attr=0x%lx, addr=%p, %lu pages\r\n", i, get_memory_map_type_name(d->Type), d->Attribute, d->PhysicalStart, d->NumberOfPages);
+    printf(hello, L"phy=%p, virt=%p, %lu pages, %s\r\n", d->PhysicalStart, d->VirtualStart, d->NumberOfPages, get_memory_map_type_name(d->Type));
   }
 }
 
