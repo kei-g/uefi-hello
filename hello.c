@@ -318,6 +318,25 @@ EFI_STATUS vprintf(HELLO hello, const wchar_t *fmt, va_list ap) {
   return EFI_SUCCESS;
 }
 
+EFI_STATUS wait_for_key_event(HELLO hello, UINT16 *scan, UINT16 *uni) {
+  EFI_SYSTEM_TABLE *systbl = hello->systbl;
+  EFI_SIMPLE_TEXT_INPUT_PROTOCOL *stdin = systbl->ConIn;
+  EFI_HANDLE events[] = {stdin->WaitForKey};
+  UINTN index;
+  EFI_STATUS status = (*systbl->BootServices->WaitForEvent)(1, events, &index);
+  if (status & EFI_ERR)
+    return status;
+  EFI_INPUT_KEY ik;
+  status = (*stdin->ReadKeyStroke)(stdin, &ik);
+  if (status & EFI_ERR)
+    return status;
+  if (scan)
+    *scan = ik.ScanCode;
+  if (uni)
+    *uni = ik.UnicodeChar;
+  return status;
+}
+
 EFI_STATUS whoami(HELLO hello, UINTN *index) {
   EFI_MP_SERVICES_PROTOCOL *mpsp = hello->mpsp;
   return mpsp ? (*mpsp->WhoAmI)(mpsp, index) : (*index = 0, EFI_SUCCESS);
