@@ -29,6 +29,7 @@ EFI_STATUS startup_all_aps(HELLO hello, EFI_AP_PROCEDURE proc, UINT8 single, EFI
 EFI_STATUS switch_graphic_output_mode(HELLO hello, UINTN mode);
 void unlock_hello(HELLO hello);
 EFI_STATUS vprintf(HELLO hello, const wchar_t *fmt, va_list ap);
+EFI_STATUS wait_for_event(HELLO hello, UINTN num, EFI_HANDLE *events, UINTN *index);
 EFI_STATUS wait_for_key_event(HELLO hello, UINT16 *scan, UINT16 *uni);
 EFI_STATUS whoami(HELLO hello, UINTN *index);
 
