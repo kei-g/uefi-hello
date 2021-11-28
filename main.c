@@ -7,6 +7,8 @@ static void ApMain(void *arg) {
   lock_hello(hello);
   if (status & EFI_ERR)
     printf(hello, L"failed to whoami, 0x%lx\r\n", status);
+  else if (index == 0)
+    printf(hello, L"BSP\r\n");
   else
     printf(hello, L"AP%lu\r\n", index);
   unlock_hello(hello);
