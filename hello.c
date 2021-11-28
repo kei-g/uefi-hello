@@ -197,6 +197,19 @@ EFI_STATUS puts(HELLO hello, const wchar_t *str) {
   return status;
 }
 
+EFI_STATUS query_graphic_output_modes(HELLO hello, HELLO_QUERY_GRAPHIC_OUTPUT_MODE_CALLBACK callback, void *arg) {
+  EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = hello->gop;
+  for (UINTN mode = 0; mode < gop->Mode->MaxMode; mode++) {
+    UINTN size;
+    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *info;
+    EFI_STATUS status = (*gop->QueryMode)(gop, mode, &size, &info);
+    if (status & EFI_ERR)
+      return status;
+    (*callback)(hello, mode, info, arg);
+  }
+  return EFI_SUCCESS;
+}
+
 void reverse(wchar_t *buf, size_t len) {
   for (size_t i = 0, j = len - 1; i < len / 2; i++, j--) {
     const wchar_t c = buf[i];

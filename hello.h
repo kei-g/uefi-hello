@@ -9,6 +9,8 @@
 
 typedef struct _HELLO *HELLO;
 
+typedef void (*HELLO_QUERY_GRAPHIC_OUTPUT_MODE_CALLBACK)(HELLO hello, UINTN mode, EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *info, void *arg);
+
 EFI_STATUS clear_console(HELLO hello);
 EFI_STATUS create_event(HELLO hello, UINT32 type, EFI_TPL tpl, EFI_EVENT_NOTIFY notify, VOID *arg, EFI_EVENT *event);
 void dump_graphic_output_mode(HELLO hello);
@@ -21,6 +23,7 @@ HELLO init_hello(EFI_HANDLE handle, EFI_SYSTEM_TABLE *systbl);
 void lock_hello(HELLO hello);
 EFI_STATUS printf(HELLO hello, const wchar_t *fmt, ...);
 EFI_STATUS puts(HELLO hello, const wchar_t *str);
+EFI_STATUS query_graphic_output_modes(HELLO hello, HELLO_QUERY_GRAPHIC_OUTPUT_MODE_CALLBACK callback, void *arg);
 void reverse(wchar_t *buf, size_t len);
 EFI_STATUS startup_all_aps(HELLO hello, EFI_AP_PROCEDURE proc, UINT8 single, EFI_EVENT event, UINTN timeout, VOID *arg, UINTN **failed);
 void unlock_hello(HELLO hello);
