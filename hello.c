@@ -23,19 +23,13 @@
   }
 
 struct _HELLO {
+  UINTN dscsiz;
   EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
   EFI_HANDLE handle;
   uintptr_t locked;
-  struct {
-    UINTN buffer_size;
-    union {
-      UINT8 buffer[0x6000];
-      EFI_MEMORY_DESCRIPTOR map[1];
-    };
-    UINTN map_key;
-    UINTN desc_size;
-    UINT32 version;
-  } memmap;
+  UINTN mapkey;
+  UINTN mapsiz;
+  EFI_MEMORY_DESCRIPTOR *memmap;
   EFI_MP_SERVICES_PROTOCOL *mpsp;
   UINTN num_enabled_proc;
   UINTN num_proc;
@@ -65,9 +59,9 @@ void dump_graphic_output_mode(HELLO hello) {
 }
 
 void dump_memory_map(HELLO hello) {
-  uintptr_t cur = (uintptr_t)hello->memmap.map;
-  uintptr_t end = cur + hello->memmap.buffer_size;
-  for (UINTN i = 0; cur < end; cur += hello->memmap.desc_size, i++) {
+  uintptr_t cur = (uintptr_t)hello->memmap;
+  uintptr_t end = cur + hello->mapsiz;
+  for (UINTN i = 0; cur < end; cur += hello->dscsiz, i++) {
     const EFI_MEMORY_DESCRIPTOR *d = (EFI_MEMORY_DESCRIPTOR *)cur;
     printf(hello, L"phy=%p, virt=%p, %lu pages, %s\r\n", d->PhysicalStart, d->VirtualStart, d->NumberOfPages, get_memory_map_type_name(d->Type));
   }
@@ -141,16 +135,33 @@ void halt(void) {
 }
 
 HELLO init_hello(EFI_HANDLE handle, EFI_SYSTEM_TABLE *systbl) {
+  UINTN bufsiz = 0, mapkey, dscsiz;
+  UINT32 dscver;
+  EFI_STATUS status = (*systbl->BootServices->GetMemoryMap)(&bufsiz, NULL, &mapkey, &dscsiz, &dscver);
+  if (status != EFI_BUFFER_TOO_SMALL)
+    (*systbl->ConOut->OutputString)(systbl->ConOut, L"failed to get memory map\r\n"), halt();
+  UINTN poolsiz = ((sizeof(struct _HELLO) + 4095) & ~4095) + bufsiz + ((sizeof(EFI_MEMORY_DESCRIPTOR) + 7) & ~7) * dscsiz;
   void *pool;
-  EFI_STATUS status = (*systbl->BootServices->AllocatePool)(EfiLoaderData, sizeof(struct _HELLO), &pool);
+  status = (*systbl->BootServices->AllocatePool)(EfiLoaderData, poolsiz, &pool);
   if (status & EFI_ERR)
     (*systbl->ConOut->OutputString)(systbl->ConOut, L"failed to allocate pool\r\n"), halt();
   HELLO hello = pool;
   hello->handle = handle;
+  hello->memmap = (EFI_MEMORY_DESCRIPTOR *)((((uintptr_t)hello) + 4095) & ~4095);
   hello->systbl = systbl;
   printf(hello, L"firmware.vendor=%s\r\n", systbl->FirmwareVendor);
   printf(hello, L"firmware.revision=0x%x\r\n", systbl->FirmwareRevision);
-  printf(hello, L"memory pool has been allocated %lu bytes at %p\r\n", sizeof(*hello), pool);
+  printf(hello, L"memory pool has been allocated %lu bytes at %p\r\n", poolsiz, pool);
+  bufsiz = poolsiz - sizeof(struct _HELLO);
+  status = (*systbl->BootServices->GetMemoryMap)(&bufsiz, hello->memmap, &hello->mapkey, &hello->dscsiz, &dscver);
+  if (status & EFI_ERR)
+    printf(hello, L"failed to get memory map, 0x%lx\r\n", status), halt();
+  hello->mapsiz = bufsiz;
+  printf(hello, L"memmap.address: %p\r\n", hello->memmap);
+  printf(hello, L"memmap.bufsiz: %lu bytes\r\n", bufsiz);
+  printf(hello, L"memmap.dscsiz: %lu bytes\r\n", hello->dscsiz);
+  printf(hello, L"memmap.dscver: 0x%x\r\n", dscver);
+  printf(hello, L"memmap.mapkey: 0x%lx\r\n", hello->mapkey);
   EFI_GUID guids[] = {
       EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID,
       EFI_MP_SERVICES_PROTOCOL_GUID,
@@ -161,11 +172,6 @@ HELLO init_hello(EFI_HANDLE handle, EFI_SYSTEM_TABLE *systbl) {
     printf(hello, L"failed to locate graphic output protocol, 0x%lx\r\n", status), halt();
   hello->gop = gop;
   hello->locked = 0;
-  hello->memmap.buffer_size = sizeof(hello->memmap.buffer);
-  status = (*systbl->BootServices->GetMemoryMap)(&hello->memmap.buffer_size, hello->memmap.map, &hello->memmap.map_key, &hello->memmap.desc_size, &hello->memmap.version);
-  if (status & EFI_ERR)
-    printf(hello, L"failed to get memory map, 0x%lx\r\n", status), halt();
-  printf(hello, L"memory map has been gotten %lu bytes at %p\r\n", hello->memmap.buffer_size, hello->memmap.buffer);
   VOID *mpsp = NULL;
   status = (*systbl->BootServices->LocateProtocol)(&guids[1], NULL, &mpsp);
   if (status & EFI_ERR)
