@@ -295,7 +295,7 @@ EFI_STATUS vprintf(HELLO hello, const wchar_t *fmt, va_list ap) {
           if (status & EFI_ERR)
             return status;
           break;
-        case 'x':
+        case L'x':
           tsprintf(uint32_t, buf, 16, ap);
           status = puts(hello, buf);
           if (status & EFI_ERR)
