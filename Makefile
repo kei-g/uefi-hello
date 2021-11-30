@@ -83,7 +83,7 @@ $(EFIBOOT_DLL): $(EFIBOOT_OBJECTS)
 	$(LD) $(LDFLAGS) /out:$@ $^
 
 $(TARGET_IMG): $(EFIBOOT_EFI) $(TARGET_IMG).xz
-	[ -f $@ ] || xz -cdv < $(TARGET_IMG).xz > $@
+	[ -f $@ ] || xz -dkv $(TARGET_IMG).xz
 	$(LOSETUP) -fP $(TARGET_IMG)
 	$(LOSETUP) -a
 	[ -d mnt ] || mkdir mnt
