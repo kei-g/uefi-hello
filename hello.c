@@ -34,7 +34,7 @@ struct _HELLO {
   EFI_SYSTEM_TABLE *systbl;
 };
 
-EFI_STATUS clear_console(HELLO hello) {
+EFI_STATUS EFIABI clear_console(HELLO hello) {
   EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *stdout = hello->systbl->ConOut;
   EFI_STATUS status = (*stdout->ClearScreen)(stdout);
   if (status & EFI_ERR)
@@ -42,15 +42,15 @@ EFI_STATUS clear_console(HELLO hello) {
   return status;
 }
 
-EFI_STATUS close_event(HELLO hello, EFI_EVENT event) {
+EFI_STATUS EFIABI close_event(HELLO hello, EFI_EVENT event) {
   return (*hello->systbl->BootServices->CloseEvent)(event);
 }
 
-EFI_STATUS create_event(HELLO hello, UINT32 type, EFI_TPL tpl, EFI_EVENT_NOTIFY notify, VOID *ctx, EFI_EVENT *event) {
+EFI_STATUS EFIABI create_event(HELLO hello, UINT32 type, EFI_TPL tpl, EFI_EVENT_NOTIFY notify, VOID *ctx, EFI_EVENT *event) {
   return (*hello->systbl->BootServices->CreateEvent)(type, tpl, notify, ctx, event);
 }
 
-void dump_graphic_output_mode(HELLO hello) {
+void EFIABI dump_graphic_output_mode(HELLO hello) {
   EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE *mode = hello->gop->Mode;
   printf(hello, L"gop.framebuffer: %p - %p\r\n", mode->FrameBufferBase, mode->FrameBufferBase + mode->FrameBufferSize);
   printf(hello, L"gop.mode: %u/%u\r\n", mode->Mode, mode->MaxMode);
@@ -60,7 +60,7 @@ void dump_graphic_output_mode(HELLO hello) {
   printf(hello, L"gop.scanline: %u pixels\r\n", info->PixelsPerScanLine);
 }
 
-void dump_memory_map(HELLO hello) {
+void EFIABI dump_memory_map(HELLO hello) {
   uintptr_t cur = (uintptr_t)hello->memmap;
   uintptr_t end = cur + hello->mapsiz;
   for (UINTN i = 0; cur < end; cur += hello->dscsiz, i++) {
@@ -69,7 +69,7 @@ void dump_memory_map(HELLO hello) {
   }
 }
 
-EFI_GRAPHICS_OUTPUT_BLT_PIXEL *get_framebuffer(HELLO hello, UINTN *horz, UINTN *vert) {
+EFI_GRAPHICS_OUTPUT_BLT_PIXEL *EFIABI get_framebuffer(HELLO hello, UINTN *horz, UINTN *vert) {
   EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE *mode = hello->gop->Mode;
   EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *info = mode->Info;
   if (horz)
@@ -79,7 +79,7 @@ EFI_GRAPHICS_OUTPUT_BLT_PIXEL *get_framebuffer(HELLO hello, UINTN *horz, UINTN *
   return (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *)mode->FrameBufferBase;
 }
 
-const wchar_t *get_memory_map_type_name(UINT32 type) {
+const wchar_t *EFIABI get_memory_map_type_name(UINT32 type) {
   switch (type) {
     case EfiReservedMemoryType:
       return L"ReservedMemoryType";
@@ -116,7 +116,7 @@ const wchar_t *get_memory_map_type_name(UINT32 type) {
   }
 }
 
-const wchar_t *get_pixel_format_name(EFI_GRAPHICS_PIXEL_FORMAT format) {
+const wchar_t *EFIABI get_pixel_format_name(EFI_GRAPHICS_PIXEL_FORMAT format) {
   switch (format) {
     case PixelRedGreenBlueReserved8BitPerColor:
       return L"RGB";
@@ -131,12 +131,12 @@ const wchar_t *get_pixel_format_name(EFI_GRAPHICS_PIXEL_FORMAT format) {
   }
 }
 
-void halt(void) {
+void EFIABI halt(void) {
   for (;;)
     __asm__("hlt");
 }
 
-HELLO init_hello(EFI_HANDLE handle, EFI_SYSTEM_TABLE *systbl) {
+HELLO EFIABI init_hello(EFI_HANDLE handle, EFI_SYSTEM_TABLE *systbl) {
   UINTN bufsiz = 0, mapkey, dscsiz;
   UINT32 dscver;
   EFI_STATUS status = (*systbl->BootServices->GetMemoryMap)(&bufsiz, NULL, &mapkey, &dscsiz, &dscver);
@@ -187,7 +187,7 @@ HELLO init_hello(EFI_HANDLE handle, EFI_SYSTEM_TABLE *systbl) {
   return hello;
 }
 
-void lock_hello(HELLO hello) {
+void EFIABI lock_hello(HELLO hello) {
   __asm__(
       "mov (%%rdx),%%rax\n"
       "test %%rax,%%rax\n"
@@ -205,7 +205,7 @@ void lock_hello(HELLO hello) {
       : "cc", "memory");
 }
 
-EFI_STATUS printf(HELLO hello, const wchar_t *fmt, ...) {
+EFI_STATUS EFIABI printf(HELLO hello, const wchar_t *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   EFI_STATUS status = vprintf(hello, fmt, ap);
@@ -213,13 +213,13 @@ EFI_STATUS printf(HELLO hello, const wchar_t *fmt, ...) {
   return status;
 }
 
-EFI_STATUS puts(HELLO hello, const wchar_t *str) {
+EFI_STATUS EFIABI puts(HELLO hello, const wchar_t *str) {
   EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *stdout = hello->systbl->ConOut;
   EFI_STATUS status = (*stdout->OutputString)(stdout, (CHAR16 *)str);
   return status;
 }
 
-EFI_STATUS query_graphic_output_modes(HELLO hello, HELLO_QUERY_GRAPHIC_OUTPUT_MODE_CALLBACK callback, void *arg) {
+EFI_STATUS EFIABI query_graphic_output_modes(HELLO hello, HELLO_QUERY_GRAPHIC_OUTPUT_MODE_CALLBACK callback, void *arg) {
   EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = hello->gop;
   for (UINTN mode = 0; mode < gop->Mode->MaxMode; mode++) {
     UINTN size;
@@ -232,7 +232,7 @@ EFI_STATUS query_graphic_output_modes(HELLO hello, HELLO_QUERY_GRAPHIC_OUTPUT_MO
   return EFI_SUCCESS;
 }
 
-void reverse(wchar_t *buf, size_t len) {
+void EFIABI reverse(wchar_t *buf, size_t len) {
   for (size_t i = 0, j = len - 1; i < len / 2; i++, j--) {
     const wchar_t c = buf[i];
     buf[i] = buf[j];
@@ -240,25 +240,25 @@ void reverse(wchar_t *buf, size_t len) {
   }
 }
 
-EFI_STATUS startup_all_aps(HELLO hello, EFI_AP_PROCEDURE proc, UINT8 single, EFI_EVENT event, UINTN timeout, VOID *arg, UINTN **failed) {
+EFI_STATUS EFIABI startup_all_aps(HELLO hello, EFI_AP_PROCEDURE proc, UINT8 single, EFI_EVENT event, UINTN timeout, VOID *arg, UINTN **failed) {
   EFI_MP_SERVICES_PROTOCOL *mpsp = hello->mpsp;
   EFI_BOOT_SERVICES *bs = hello->systbl->BootServices;
   return mpsp ? (*mpsp->StartupAllAPs)(mpsp, proc, single, event, timeout, arg, failed) : ((*proc)(arg), (*bs->SignalEvent)(event), 1);
 }
 
-EFI_STATUS switch_graphic_output_mode(HELLO hello, UINTN mode) {
+EFI_STATUS EFIABI switch_graphic_output_mode(HELLO hello, UINTN mode) {
   EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = hello->gop;
   return (*gop->SetMode)(gop, mode);
 }
 
-void unlock_hello(HELLO hello) {
+void EFIABI unlock_hello(HELLO hello) {
   __asm__("mov %%rax,(%%rdx)"
           :
           : "a"(0), "d"(&hello->locked)
           : "cc", "memory");
 }
 
-EFI_STATUS vprintf(HELLO hello, const wchar_t *fmt, va_list ap) {
+EFI_STATUS EFIABI vprintf(HELLO hello, const wchar_t *fmt, va_list ap) {
   for (const wchar_t *ptr = fmt; *ptr != L'\0'; ptr++) {
     wchar_t buf[32];
     EFI_STATUS status;
@@ -344,12 +344,12 @@ EFI_STATUS vprintf(HELLO hello, const wchar_t *fmt, va_list ap) {
   return EFI_SUCCESS;
 }
 
-EFI_STATUS wait_for_event(HELLO hello, UINTN num, EFI_HANDLE *events, UINTN *index) {
+EFI_STATUS EFIABI wait_for_event(HELLO hello, UINTN num, EFI_HANDLE *events, UINTN *index) {
   EFI_SYSTEM_TABLE *systbl = hello->systbl;
   return (*systbl->BootServices->WaitForEvent)(num, events, index);
 }
 
-EFI_STATUS wait_for_key_event(HELLO hello, UINT16 *scan, UINT16 *uni) {
+EFI_STATUS EFIABI wait_for_key_event(HELLO hello, UINT16 *scan, UINT16 *uni) {
   EFI_SYSTEM_TABLE *systbl = hello->systbl;
   EFI_SIMPLE_TEXT_INPUT_PROTOCOL *stdin = systbl->ConIn;
   EFI_HANDLE events[] = {stdin->WaitForKey};
@@ -368,7 +368,7 @@ EFI_STATUS wait_for_key_event(HELLO hello, UINT16 *scan, UINT16 *uni) {
   return status;
 }
 
-EFI_STATUS whoami(HELLO hello, UINTN *index) {
+EFI_STATUS EFIABI whoami(HELLO hello, UINTN *index) {
   EFI_MP_SERVICES_PROTOCOL *mpsp = hello->mpsp;
   return mpsp ? (*mpsp->WhoAmI)(mpsp, index) : (*index = 0, EFI_SUCCESS);
 }

@@ -1,6 +1,6 @@
 #include "hello.h"
 
-static void ApMain(void *arg) {
+static void EFIABI ApMain(void *arg) {
   HELLO hello = arg;
   UINTN index;
   EFI_STATUS status = whoami(hello, &index);
@@ -24,14 +24,14 @@ static void ApMain(void *arg) {
   }
 }
 
-static void Notify(EFI_EVENT event, void *arg) {
+static void EFIABI Notify(EFI_EVENT event, void *arg) {
 }
 
-static void callback(HELLO hello, UINTN mode, EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *info, void *arg) {
+static void EFIABI callback(HELLO hello, UINTN mode, EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *info, void *arg) {
   printf(hello, L"%lu: %s, %u x %u\r\n", mode, get_pixel_format_name(info->PixelFormat), info->HorizontalResolution, info->VerticalResolution);
 }
 
-static void cleanup_preceding_event(HELLO hello, EFI_EVENT *evt) {
+static void EFIABI cleanup_preceding_event(HELLO hello, EFI_EVENT *evt) {
   if (*evt == NULL)
     unlock_hello(hello);
   else {
@@ -64,7 +64,7 @@ static void cleanup_preceding_event(HELLO hello, EFI_EVENT *evt) {
   }
 }
 
-static void test_all_APs(HELLO hello, EFI_EVENT *evt) {
+static void EFIABI test_all_APs(HELLO hello, EFI_EVENT *evt) {
   cleanup_preceding_event(hello, evt);
   EFI_STATUS status = startup_all_aps(hello, ApMain, EFI_FALSE, *evt, 0, hello, NULL);
   if (status & EFI_ERR) {
@@ -82,7 +82,7 @@ static void test_all_APs(HELLO hello, EFI_EVENT *evt) {
   lock_hello(hello);
 }
 
-EFI_STATUS EfiMain(EFI_HANDLE handle, EFI_SYSTEM_TABLE *systbl) {
+EFI_STATUS EFIABI EfiMain(EFI_HANDLE handle, EFI_SYSTEM_TABLE *systbl) {
   HELLO hello = init_hello(handle, systbl);
   for (EFI_EVENT evt = NULL;;) {
     lock_hello(hello);
