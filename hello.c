@@ -226,7 +226,8 @@ void reverse(wchar_t *buf, size_t len) {
 
 EFI_STATUS startup_all_aps(HELLO hello, EFI_AP_PROCEDURE proc, UINT8 single, EFI_EVENT event, UINTN timeout, VOID *arg, UINTN **failed) {
   EFI_MP_SERVICES_PROTOCOL *mpsp = hello->mpsp;
-  return mpsp ? (*mpsp->StartupAllAPs)(mpsp, proc, single, event, timeout, arg, failed) : ((*proc)(arg), 1);
+  EFI_BOOT_SERVICES *bs = hello->systbl->BootServices;
+  return mpsp ? (*mpsp->StartupAllAPs)(mpsp, proc, single, event, timeout, arg, failed) : ((*proc)(arg), (*bs->SignalEvent)(event), 1);
 }
 
 EFI_STATUS switch_graphic_output_mode(HELLO hello, UINTN mode) {
