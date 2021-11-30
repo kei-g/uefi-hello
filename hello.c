@@ -246,6 +246,11 @@ EFI_STATUS EFIABI startup_all_aps(HELLO hello, EFI_AP_PROCEDURE proc, UINT8 sing
   return mpsp ? (*mpsp->StartupAllAPs)(mpsp, proc, single, event, timeout, arg, failed) : ((*proc)(arg), (*bs->SignalEvent)(event), 1);
 }
 
+EFI_STATUS EFIABI startup_this_ap(HELLO hello, EFI_AP_PROCEDURE proc, EFI_EVENT event, UINTN timeout, VOID *arg, BOOLEAN *finished, UINTN ap) {
+  EFI_MP_SERVICES_PROTOCOL *mpsp = hello->mpsp;
+  return mpsp ? (*mpsp->StartupThisAP)(mpsp, proc, ap, event, timeout, arg, finished) : EFI_UNSUPPORTED;
+}
+
 EFI_STATUS EFIABI switch_graphic_output_mode(HELLO hello, UINTN mode) {
   EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = hello->gop;
   return (*gop->SetMode)(gop, mode);

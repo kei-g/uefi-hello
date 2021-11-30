@@ -24,6 +24,38 @@ static void EFIABI ApMain(void *arg) {
   }
 }
 
+static UINTN EFIABI getclock(UINTN *hi);
+
+static void EFIABI GraphicTest(void *arg) {
+  HELLO hello = arg;
+  UINTN horz, vert;
+  EFI_GRAPHICS_OUTPUT_BLT_PIXEL *fb = get_framebuffer(hello, &horz, &vert);
+  for (int coeff = 0; coeff < 256; coeff++) {
+    for (int y = 256; y < 512; y++)
+      for (int x = 512; x < 768; x++) {
+        EFI_GRAPHICS_OUTPUT_BLT_PIXEL *p = &fb[y * horz + x];
+        p->BLUE = y;
+        p->GREEN = coeff;
+        p->RED = x;
+      }
+    UINTN hi, lo = getclock(&hi);
+    __asm__(
+        "add $0x04000000,%%rax\n"
+        "adc $0,%%rdx\n"
+        : "+a"(lo), "+d"(hi)
+        :
+        : "cc", "memory");
+    for (;;) {
+      UINTN chi, clo = getclock(&chi);
+      if (hi < chi)
+        break;
+      else if (hi == chi && lo < clo)
+        break;
+      __asm__("pause");
+    }
+  }
+}
+
 static void EFIABI Notify(EFI_EVENT event, void *arg) {
 }
 
@@ -64,12 +96,39 @@ static void EFIABI cleanup_preceding_event(HELLO hello, EFI_EVENT *evt) {
   }
 }
 
+static UINTN EFIABI getclock(UINTN *hi) {
+  UINTN lo;
+  __asm__("rdtsc"
+          : "=a"(lo), "=d"(*hi)
+          :
+          : "cc", "memory");
+  return lo;
+}
+
 static void EFIABI test_all_APs(HELLO hello, EFI_EVENT *evt) {
   cleanup_preceding_event(hello, evt);
   EFI_STATUS status = startup_all_aps(hello, ApMain, EFI_FALSE, *evt, 0, hello, NULL);
   if (status & EFI_ERR) {
     lock_hello(hello);
     printf(hello, L"failed to startup all APs, 0x%lx\r\n", status);
+    unlock_hello(hello);
+    status = close_event(hello, *evt);
+    if (EFI_ERR) {
+      lock_hello(hello);
+      printf(hello, L"failed to close an event, 0x%lx\r\n", status);
+      unlock_hello(hello);
+    }
+    *evt = NULL;
+  }
+  lock_hello(hello);
+}
+
+static void EFIABI test_graphic(HELLO hello, EFI_EVENT *evt) {
+  cleanup_preceding_event(hello, evt);
+  EFI_STATUS status = startup_this_ap(hello, GraphicTest, *evt, 0, hello, NULL, 1);
+  if (status & EFI_ERR) {
+    lock_hello(hello);
+    printf(hello, L"failed to startup AP1, 0x%lx\r\n", status);
     unlock_hello(hello);
     status = close_event(hello, *evt);
     if (EFI_ERR) {
@@ -105,6 +164,9 @@ EFI_STATUS EFIABI EfiMain(EFI_HANDLE handle, EFI_SYSTEM_TABLE *systbl) {
         break;
       case L'q':
         query_graphic_output_modes(hello, callback, NULL);
+        break;
+      case L't':
+        test_graphic(hello, &evt);
         break;
     }
     printf(hello, L"----\r\n");
