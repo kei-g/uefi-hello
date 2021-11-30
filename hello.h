@@ -12,6 +12,7 @@ typedef struct _HELLO *HELLO;
 typedef void (*HELLO_QUERY_GRAPHIC_OUTPUT_MODE_CALLBACK)(HELLO hello, UINTN mode, EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *info, void *arg);
 
 EFI_STATUS clear_console(HELLO hello);
+EFI_STATUS close_event(HELLO hello, EFI_EVENT event);
 EFI_STATUS create_event(HELLO hello, UINT32 type, EFI_TPL tpl, EFI_EVENT_NOTIFY notify, VOID *arg, EFI_EVENT *event);
 void dump_graphic_output_mode(HELLO hello);
 void dump_memory_map(HELLO hello);

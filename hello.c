@@ -42,6 +42,10 @@ EFI_STATUS clear_console(HELLO hello) {
   return status;
 }
 
+EFI_STATUS close_event(HELLO hello, EFI_EVENT event) {
+  return (*hello->systbl->BootServices->CloseEvent)(event);
+}
+
 EFI_STATUS create_event(HELLO hello, UINT32 type, EFI_TPL tpl, EFI_EVENT_NOTIFY notify, VOID *ctx, EFI_EVENT *event) {
   return (*hello->systbl->BootServices->CreateEvent)(type, tpl, notify, ctx, event);
 }
