@@ -16,6 +16,12 @@ CFLAGS+=-mno-red-zone
 CFLAGS+=-pedantic
 CFLAGS+=-std=c2x
 CFLAGS+=-target x86_64-pc-mingw-w64
+EFIBOOT_DLL=bootx64.dll
+EFIBOOT_EFI=$(EFIBOOT_DLL:%.dll=%.efi)
+EFIBOOT_OBJECTS=$(EFIBOOT_SOURCES:%.c=%.o)
+EFIBOOT_OBJECTS+=spinlock.o
+EFIBOOT_SOURCES+=hello.c
+EFIBOOT_SOURCES+=boot.c
 LD=lld-link
 LDFLAGS+=/dll
 LDFLAGS+=/entry:EfiMain
@@ -24,8 +30,6 @@ LDFLAGS+=/version:1.0
 LOSETUP=sudo losetup
 NAME=hello
 OBJCOPY=objcopy
-OBJECTS=$(SOURCES:%.c=%.o)
-OBJECTS+=spinlock.o
 #OFLAGS+=-j.text
 #OFLAGS+=-j.rdata
 #OFLAGS+=--strip-all
@@ -46,17 +50,13 @@ QEMUFLAGS+=-machine type=pc,accel=kvm
 QEMUFLAGS+=-smp cpus=4,maxcpus=4,cores=4,threads=1
 QEMUFLAGS+=-vga std
 #QEMUFLAGS+=-vga virtio
-SOURCES+=hello.c
-SOURCES+=main.c
-TARGET_DLL=$(NAME).dll
-TARGET_EFI=$(NAME).efi
 TARGET_IMG=$(NAME).img
 TARGET_VDI=$(NAME).vdi
 
-all: $(TARGET_EFI)
+all: $(EFIBOOT_EFI)
 
 clean:
-	$(RM) -r $(NAME).lib $(OBJECTS) $(TARGET_DLL) $(TARGET_EFI) $(TARGET_IMG) $(TARGET_VDI) mnt/
+	$(RM) -r *.dll *.efi *.img *.lib *.o *.vdi mnt/
 
 run: $(OVMF_FD) $(TARGET_IMG)
 	$(QEMU) $(QEMUFLAGS)
@@ -83,17 +83,17 @@ $(OVMF_FD): $(OVMF_ZIP)
 $(OVMF_ZIP):
 	wget https://downloads.sourceforge.net/project/edk2/OVMF/OVMF-X64-r15214.zip
 
-$(TARGET_DLL): $(OBJECTS)
+$(EFIBOOT_DLL): $(EFIBOOT_OBJECTS)
 	$(LD) $(LDFLAGS) /out:$@ $^
 
-$(TARGET_IMG): $(TARGET_EFI) $(TARGET_IMG).xz
+$(TARGET_IMG): $(EFIBOOT_EFI) $(TARGET_IMG).xz
 	[ -f $@ ] || xz -cdv < $(TARGET_IMG).xz > $@
 	$(LOSETUP) -fP $(TARGET_IMG)
 	$(LOSETUP) -a
 	[ -d mnt ] || mkdir mnt
 	sudo mount /dev/loop0p1 mnt
 	sudo $(RM) mnt/EFI/BOOT/BOOTX64.EFI
-	sudo dd if=$(TARGET_EFI) of=mnt/EFI/BOOT/BOOTX64.EFI
+	sudo dd if=$(EFIBOOT_EFI) of=mnt/EFI/BOOT/BOOTX64.EFI
 	sudo umount mnt
 	$(LOSETUP) -d /dev/loop0
 	$(RM) -r mnt
