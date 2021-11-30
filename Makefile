@@ -19,7 +19,6 @@ CFLAGS+=-target x86_64-pc-mingw-w64
 EFIBOOT_DLL=bootx64.dll
 EFIBOOT_EFI=$(EFIBOOT_DLL:%.dll=%.efi)
 EFIBOOT_OBJECTS=$(EFIBOOT_SOURCES:%.c=%.o)
-EFIBOOT_OBJECTS+=spinlock.o
 EFIBOOT_SOURCES+=hello.c
 EFIBOOT_SOURCES+=boot.c
 LD=lld-link
@@ -73,9 +72,6 @@ run: $(OVMF_FD) $(TARGET_IMG)
 
 .img.vdi:
 	VBoxManage convertfromraw --format VDI $^ $@
-
-.s.o:
-	$(CC) -c $< -target x86_64-pc-mingw-w64
 
 $(OVMF_FD): $(OVMF_ZIP)
 	[ -f $@ ] || unzip $^ $@

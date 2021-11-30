@@ -1,7 +1,5 @@
 #include "hello.h"
 
-#include "spinlock.h"
-
 #define tsprintf(T, dst, radix, ap)                 \
   {                                                 \
     const T value = va_arg(ap, T);                  \
@@ -186,7 +184,21 @@ HELLO init_hello(EFI_HANDLE handle, EFI_SYSTEM_TABLE *systbl) {
 }
 
 void lock_hello(HELLO hello) {
-  spinlock_lock(&hello->locked);
+  __asm__(
+      "mov (%%rdx),%%rax\n"
+      "test %%rax,%%rax\n"
+      "jz try_lock%=\n"
+      "head%=:\n"
+      "pause\n"
+      "mov (%%rdx),%%rax\n"
+      "test %%rax,%%rax\n"
+      "jnz head%=\n"
+      "try_lock%=:\n"
+      "lock; cmpxchg %%rcx,(%%rdx)\n"
+      "jnz head%=\n"
+      :
+      : "c"(1), "d"(&hello->locked)
+      : "cc", "memory");
 }
 
 EFI_STATUS printf(HELLO hello, const wchar_t *fmt, ...) {
@@ -236,7 +248,10 @@ EFI_STATUS switch_graphic_output_mode(HELLO hello, UINTN mode) {
 }
 
 void unlock_hello(HELLO hello) {
-  spinlock_unlock(&hello->locked);
+  __asm__("mov %%rax,(%%rdx)"
+          :
+          : "a"(0), "d"(&hello->locked)
+          : "cc", "memory");
 }
 
 EFI_STATUS vprintf(HELLO hello, const wchar_t *fmt, va_list ap) {
