@@ -2,5 +2,5 @@
 
 `uefi-hello` - Hello UEFI Application
 
-[license-image]:https://img.shields.io/github/license/kei-g/libfsasync
+[license-image]:https://img.shields.io/github/license/kei-g/uefi-hello
 [license-url]:https://opensource.org/licenses/BSD-3-Clause
