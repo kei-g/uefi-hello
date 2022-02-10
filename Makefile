@@ -1,4 +1,5 @@
 CC=clang
+CFLAGS+=--target=x86_64-pc-windows-msvc
 CFLAGS+=-Iefi
 CFLAGS+=-Oz
 CFLAGS+=-Wall
@@ -12,27 +13,30 @@ CFLAGS+=-fno-stack-check
 CFLAGS+=-fno-stack-protector
 CFLAGS+=-fno-use-cxa-atexit
 CFLAGS+=-fshort-wchar
+CFLAGS+=-march=native
 CFLAGS+=-mno-red-zone
+CFLAGS+=-nostdlib
 CFLAGS+=-pedantic
 CFLAGS+=-std=c2x
-CFLAGS+=-target x86_64-pc-mingw-w64
-EFIBOOT_DLL=bootx64.dll
-EFIBOOT_EFI=$(EFIBOOT_DLL:%.dll=%.efi)
+EFIBOOT_EFI=bootx64.efi
 EFIBOOT_OBJECTS=$(EFIBOOT_SOURCES:%.c=%.o)
 EFIBOOT_SOURCES+=hello.c
 EFIBOOT_SOURCES+=boot.c
-LD=lld-link
-LDFLAGS+=/dll
-LDFLAGS+=/entry:EfiMain
-LDFLAGS+=/nodefaultlib
-LDFLAGS+=/version:1.0
+LD=clang
+LDFLAGS+=--target=x86_64-pc-windows-msvc
+LDFLAGS+=-Wl,/dll
+LDFLAGS+=-Wl,/entry:EfiMain
+LDFLAGS+=-Wl,/nodefaultlib
+LDFLAGS+=-Wl,/safeseh:no
+LDFLAGS+=-Wl,/subsystem:efi_application
+LDFLAGS+=-Wl,/version:1.0
+LDFLAGS+=-ffreestanding
+LDFLAGS+=-flto
+LDFLAGS+=-fuse-ld=lld
+LDFLAGS+=-march=native
+LDFLAGS+=-nostdlib
 LOSETUP=sudo losetup
 NAME=hello
-OBJCOPY=objcopy
-#OFLAGS+=-j.text
-#OFLAGS+=-j.rdata
-#OFLAGS+=--strip-all
-OFLAGS+=--target efi-app-x86_64
 OVMF_FD=OVMF.fd
 OVMF_ZIP=OVMF-X64-r15214.zip
 QEMU=qemu-system-x86_64
@@ -67,9 +71,6 @@ run: $(OVMF_FD) $(TARGET_IMG)
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
-.dll.efi:
-	$(OBJCOPY) $(OFLAGS) $^ $@
-
 .img.vdi:
 	VBoxManage convertfromraw --format VDI $^ $@
 
@@ -79,8 +80,8 @@ $(OVMF_FD): $(OVMF_ZIP)
 $(OVMF_ZIP):
 	wget https://downloads.sourceforge.net/project/edk2/OVMF/OVMF-X64-r15214.zip
 
-$(EFIBOOT_DLL): $(EFIBOOT_OBJECTS)
-	$(LD) $(LDFLAGS) /out:$@ $^
+$(EFIBOOT_EFI): $(EFIBOOT_OBJECTS)
+	$(LD) $(LDFLAGS) -Wl,/out:$@ $^
 
 $(TARGET_IMG): $(EFIBOOT_EFI) $(TARGET_IMG).xz
 	[ -f $@ ] || xz -dkv $(TARGET_IMG).xz
